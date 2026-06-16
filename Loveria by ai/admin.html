@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sourav & Paro — Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;1,400&family=Quicksand:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --rose:#c0446a;
+  --rose-light:#e8839f;
+  --petal:#f9d0dc;
+  --cream:#fdf6f8;
+  --ink:#3a1a25;
+  --muted:#8a5060;
+  --ok:#3a8a5c;
+  --err:#c0392b;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+  font-family:'Quicksand',sans-serif;
+  background:var(--cream);
+  color:var(--ink);
+  padding:2rem 1.2rem 5rem;
+}
+.wrap{max-width:760px;margin:0 auto;}
+h1{
+  font-family:'Cormorant Garamond',serif;
+  font-style:italic;
+  font-size:2.2rem;
+  color:var(--rose);
+  margin-bottom:0.3rem;
+}
+.subtitle{color:var(--muted);font-size:0.92rem;margin-bottom:2rem;}
+
+.card{
+  background:#fff;
+  border:1px solid var(--petal);
+  border-radius:1rem;
+  padding:1.5rem;
+  margin-bottom:1.5rem;
+}
+.card h2{
+  font-family:'Cormorant Garamond',serif;
+  font-style:italic;
+  font-size:1.4rem;
+  color:var(--rose);
+  margin-bottom:1rem;
+}
+label{
+  display:block;
+  font-size:0.78rem;
+  text-transform:uppercase;
+  letter-spacing:0.08em;
+  color:var(--rose-light);
+  margin-bottom:0.3rem;
+  margin-top:1rem;
+  font-weight:600;
+}
+label:first-of-type{margin-top:0;}
+input[type=text], input[type=password], input[type=date], textarea{
+  width:100%;
+  padding:0.65rem 0.8rem;
+  border:1px solid var(--petal);
+  border-radius:0.5rem;
+  font-family:'Quicksand',sans-serif;
+  font-size:0.95rem;
+  color:var(--ink);
+  background:var(--cream);
+}
+textarea{resize:vertical;min-height:60px;}
+input:focus, textarea:focus{outline:2px solid var(--rose-light);}
+
+.token-row{display:flex;gap:0.5rem;align-items:flex-end;}
+.token-row input{flex:1;}
+button{
+  font-family:'Quicksand',sans-serif;
+  font-weight:600;
+  font-size:0.9rem;
+  border:none;
+  border-radius:0.5rem;
+  padding:0.65rem 1.2rem;
+  cursor:pointer;
+  transition:transform 0.15s, opacity 0.15s;
+}
+button:hover{transform:translateY(-1px);}
+button:active{transform:translateY(0);}
+button:disabled{opacity:0.5;cursor:not-allowed;transform:none;}
+
+.btn-primary{background:var(--rose);color:#fff;}
+.btn-secondary{background:var(--petal);color:var(--ink);}
+.btn-small{padding:0.4rem 0.8rem;font-size:0.78rem;}
+
+.status-pill{
+  display:inline-block;
+  font-size:0.75rem;
+  padding:0.2rem 0.6rem;
+  border-radius:1rem;
+  margin-left:0.5rem;
+  vertical-align:middle;
+}
+.status-ok{background:#dff3e6;color:var(--ok);}
+.status-err{background:#fbe1de;color:var(--err);}
+
+.drop-zone{
+  border:2px dashed var(--rose-light);
+  border-radius:0.8rem;
+  padding:1.5rem;
+  text-align:center;
+  cursor:pointer;
+  background:var(--cream);
+  transition:background 0.2s;
+}
+.drop-zone:hover{background:var(--petal);}
+.drop-zone.has-image{padding:0;border-style:solid;overflow:hidden;}
+
+#cropCanvasWrap{
+  position:relative;
+  width:100%;
+  aspect-ratio:4/5;
+  background:#222;
+  border-radius:0.8rem;
+  overflow:hidden;
+  display:none;
+  touch-action:none;
+}
+#cropCanvasWrap canvas{width:100%;height:100%;display:block;}
+.zoom-row{display:flex;align-items:center;gap:0.8rem;margin-top:0.8rem;}
+.zoom-row input[type=range]{flex:1;}
+.zoom-row span{font-size:0.8rem;color:var(--muted);min-width:3.2rem;text-align:right;}
+
+.hint{font-size:0.78rem;color:var(--muted);margin-top:0.4rem;line-height:1.4;}
+
+.slot-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:0.6rem;margin-bottom:1rem;}
+.slot-pill{
+  border:1px solid var(--petal);
+  border-radius:0.5rem;
+  padding:0.5rem;
+  text-align:center;
+  font-size:0.8rem;
+  cursor:pointer;
+  background:var(--cream);
+}
+.slot-pill.selected{background:var(--rose);color:#fff;border-color:var(--rose);}
+.slot-pill.filled::after{content:" •";color:var(--ok);}
+
+.log-box{
+  background:#1b1015;
+  color:#e8d5db;
+  font-family:monospace;
+  font-size:0.78rem;
+  padding:0.8rem;
+  border-radius:0.5rem;
+  max-height:160px;
+  overflow-y:auto;
+  margin-top:1rem;
+  white-space:pre-wrap;
+  display:none;
+}
+
+.actions-row{display:flex;gap:0.6rem;flex-wrap:wrap;margin-top:1rem;}
+
+.banner{
+  background:#fff3cd;
+  border:1px solid #ffe69c;
+  color:#7a5b00;
+  padding:0.8rem 1rem;
+  border-radius:0.6rem;
+  font-size:0.85rem;
+  margin-bottom:1.5rem;
+  line-height:1.5;
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Sourav & Paro — Admin</h1>
+  <p class="subtitle">Private panel for managing the gallery. Don't share this page's link.</p>
+
+  <div class="banner">
+    ⚠️ This page is unprotected by login — anyone with the link and your token saved in their browser could edit the site. Keep the link private, and only enter your token on your own device.
+  </div>
+
+  <!-- CONNECTION -->
+  <div class="card">
+    <h2>Connection</h2>
+    <label>GitHub Personal Access Token</label>
+    <div class="token-row">
+      <input type="password" id="ghToken" placeholder="ghp_... or github_pat_...">
+      <button class="btn-secondary btn-small" id="toggleTokenBtn">Show</button>
+    </div>
+    <p class="hint">Stored only in this browser's local memory for this session — not saved anywhere, not sent to us. Re-enter each time you reload this page, or click "Remember on this device" below.</p>
+    <label style="display:flex;align-items:center;gap:0.4rem;margin-top:0.6rem;text-transform:none;letter-spacing:normal;font-size:0.85rem;color:var(--ink);font-weight:400;">
+      <input type="checkbox" id="rememberToken" style="width:auto;"> Remember on this device
+    </label>
+    <div class="actions-row">
+      <button class="btn-primary btn-small" id="testConnBtn">Test connection</button>
+      <span id="connStatus"></span>
+    </div>
+  </div>
+
+  <!-- SLOT PICKER -->
+  <div class="card">
+    <h2>1. Choose a photo slot</h2>
+    <p class="hint">Slots 1–4 already exist on the page. Add more if you need extra space.</p>
+    <div class="slot-grid" id="slotGrid"></div>
+    <button class="btn-secondary btn-small" id="addSlotBtn">+ Add new slot</button>
+  </div>
+
+  <!-- IMAGE UPLOAD + CROP -->
+  <div class="card">
+    <h2>2. Upload & adjust photo</h2>
+    <div class="drop-zone" id="dropZone">
+      <input type="file" id="fileInput" accept="image/*" style="display:none;">
+      <span id="dropZoneLabel">📷 Click to choose a photo</span>
+    </div>
+    <div id="cropCanvasWrap">
+      <canvas id="cropCanvas"></canvas>
+    </div>
+    <div class="zoom-row" id="zoomRow" style="display:none;">
+      <span>Zoom</span>
+      <input type="range" id="zoomSlider" min="100" max="300" value="100">
+      <span id="zoomVal">100%</span>
+    </div>
+    <p class="hint" id="dragHint" style="display:none;">Drag the photo to reposition it inside the frame.</p>
+  </div>
+
+  <!-- DETAILS -->
+  <div class="card">
+    <h2>3. Details</h2>
+    <label>Date</label>
+    <input type="date" id="photoDate">
+
+    <label>Description — English</label>
+    <textarea id="descEng" placeholder="e.g. Our first date at the tea stall"></textarea>
+
+    <label>Description — বাংলা</label>
+    <textarea id="descBen" placeholder="যেমন: চায়ের দোকানে আমাদের প্রথম দেখা"></textarea>
+  </div>
+
+  <!-- PUBLISH -->
+  <div class="card">
+    <h2>4. Preview & publish</h2>
+    <p class="hint">This commits directly to your <code>souravparostory</code> repository's <code>index.html</code>. The site updates automatically within about a minute. Always check the preview before publishing.</p>
+    <div class="actions-row">
+      <button class="btn-secondary" id="previewBtn">Preview change</button>
+    </div>
+    <div id="previewBox" style="display:none;margin-top:1rem;">
+      <label>What will be written for this slot</label>
+      <textarea id="previewText" readonly style="min-height:140px;font-family:monospace;font-size:0.75rem;"></textarea>
+      <div class="actions-row">
+        <button class="btn-primary" id="publishBtn">Publish this to the website</button>
+      </div>
+    </div>
+    <div id="publishStatus" style="margin-top:0.6rem;"></div>
+    <div class="log-box" id="logBox"></div>
+  </div>
+
+</div>
+
+<script>
+const GH_USER = 'novaeditstudio-blip';
+const GH_REPO = 'souravparostory';
+const GH_BRANCH = 'main';
+const SITE_FOLDER = 'Loveria by ai';
+const IMAGE_SUBFOLDER = 'recources'; // folder name as it appears inside SITE_FOLDER
+const IMAGE_UPLOAD_FOLDER = `${SITE_FOLDER}/${IMAGE_SUBFOLDER}`; // full path for GitHub uploads
+const IMAGE_FOLDER = IMAGE_SUBFOLDER; // relative path used inside index.html's <img src>, since index.html lives inside SITE_FOLDER
+const FRAME_RATIO = 4 / 5; // matches .photo-frame aspect-ratio in style.css
+
+let token = '';
+let slots = [1, 2, 3, 4];
+let selectedSlot = 1;
+let currentFileBase64 = null;
+let currentFileName = null;
+let img = new Image();
+let imgLoaded = false;
+let zoom = 1;
+let offsetX = 0, offsetY = 0;
+let dragging = false, lastX = 0, lastY = 0;
+
+const logBox = document.getElementById('logBox');
+function log(msg) {
+  logBox.style.display = 'block';
+  logBox.textContent += msg + '\n';
+  logBox.scrollTop = logBox.scrollHeight;
+}
+
+// ── TOKEN HANDLING ──────────────────────────────
+const tokenInput = document.getElementById('ghToken');
+const rememberBox = document.getElementById('rememberToken');
+if (sessionStorage.getItem('gh_token_session')) {
+  tokenInput.value = sessionStorage.getItem('gh_token_session');
+}
+document.getElementById('toggleTokenBtn').addEventListener('click', () => {
+  tokenInput.type = tokenInput.type === 'password' ? 'text' : 'password';
+});
+tokenInput.addEventListener('input', () => {
+  token = tokenInput.value.trim();
+  if (rememberBox.checked) sessionStorage.setItem('gh_token_session', token);
+});
+rememberBox.addEventListener('change', () => {
+  if (rememberBox.checked) sessionStorage.setItem('gh_token_session', tokenInput.value.trim());
+  else sessionStorage.removeItem('gh_token_session');
+});
+
+async function ghRequest(path, opts = {}) {
+  const res = await fetch(`https://api.github.com/repos/${GH_USER}/${GH_REPO}${path}`, {
+    ...opts,
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Accept': 'application/vnd.github+json',
+      ...(opts.headers || {})
+    }
+  });
+  return res;
+}
+
+document.getElementById('testConnBtn').addEventListener('click', async () => {
+  const statusEl = document.getElementById('connStatus');
+  statusEl.innerHTML = '<span class="status-pill">Checking…</span>';
+  if (!token) {
+    statusEl.innerHTML = '<span class="status-pill status-err">Enter a token first</span>';
+    return;
+  }
+  try {
+    const res = await ghRequest('');
+    if (res.ok) {
+      statusEl.innerHTML = '<span class="status-pill status-ok">Connected ✓</span>';
+    } else {
+      const body = await res.json().catch(() => ({}));
+      statusEl.innerHTML = `<span class="status-pill status-err">Failed (${res.status})</span>`;
+      log(`Connection test failed: ${res.status} ${body.message || ''}`);
+    }
+  } catch (e) {
+    statusEl.innerHTML = '<span class="status-pill status-err">Network error</span>';
+    log('Connection test error: ' + e.message);
+  }
+});
+
+// ── SLOT PICKER ──────────────────────────────────
+function renderSlots() {
+  const grid = document.getElementById('slotGrid');
+  grid.innerHTML = '';
+  slots.forEach(n => {
+    const pill = document.createElement('div');
+    pill.className = 'slot-pill' + (n === selectedSlot ? ' selected' : '');
+    pill.textContent = 'Slot ' + n;
+    pill.addEventListener('click', () => { selectedSlot = n; renderSlots(); });
+    grid.appendChild(pill);
+  });
+}
+renderSlots();
+
+document.getElementById('addSlotBtn').addEventListener('click', () => {
+  const next = Math.max(...slots) + 1;
+  slots.push(next);
+  selectedSlot = next;
+  renderSlots();
+});
+
+// ── IMAGE UPLOAD ───────────────────────────────────
+const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('fileInput');
+const canvasWrap = document.getElementById('cropCanvasWrap');
+const canvas = document.getElementById('cropCanvas');
+const ctx = canvas.getContext('2d');
+const zoomRow = document.getElementById('zoomRow');
+const zoomSlider = document.getElementById('zoomSlider');
+const zoomVal = document.getElementById('zoomVal');
+const dragHint = document.getElementById('dragHint');
+
+dropZone.addEventListener('click', () => fileInput.click());
+fileInput.addEventListener('change', (e) => {
+  if (e.target.files[0]) loadFile(e.target.files[0]);
+});
+dropZone.addEventListener('dragover', (e) => { e.preventDefault(); });
+dropZone.addEventListener('drop', (e) => {
+  e.preventDefault();
+  if (e.dataTransfer.files[0]) loadFile(e.dataTransfer.files[0]);
+});
+
+function loadFile(file) {
+  currentFileName = file.name;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    currentFileBase64 = ev.target.result.split(',')[1];
+    img = new Image();
+    img.onload = () => {
+      imgLoaded = true;
+      zoom = 1;
+      offsetX = 0;
+      offsetY = 0;
+      zoomSlider.value = 100;
+      zoomVal.textContent = '100%';
+      canvasWrap.style.display = 'block';
+      zoomRow.style.display = 'flex';
+      dragHint.style.display = 'block';
+      document.getElementById('dropZoneLabel').textContent = '📷 ' + file.name + ' (click to change)';
+      resizeCanvas();
+      drawCanvas();
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function resizeCanvas() {
+  const rect = canvasWrap.getBoundingClientRect();
+  canvas.width = rect.width;
+  canvas.height = rect.height;
+}
+window.addEventListener('resize', () => { if (imgLoaded) { resizeCanvas(); drawCanvas(); } });
+
+function drawCanvas() {
+  if (!imgLoaded) return;
+  const cw = canvas.width, ch = canvas.height;
+  ctx.clearRect(0, 0, cw, ch);
+  ctx.fillStyle = '#222';
+  ctx.fillRect(0, 0, cw, ch);
+
+  // base scale: cover the canvas at zoom=1
+  const baseScale = Math.max(cw / img.width, ch / img.height);
+  const scale = baseScale * zoom;
+  const drawW = img.width * scale;
+  const drawH = img.height * scale;
+
+  let dx = (cw - drawW) / 2 + offsetX;
+  let dy = (ch - drawH) / 2 + offsetY;
+
+  // clamp so image always covers the canvas
+  dx = Math.min(0, Math.max(dx, cw - drawW));
+  dy = Math.min(0, Math.max(dy, ch - drawH));
+  offsetX = dx - (cw - drawW) / 2;
+  offsetY = dy - (ch - drawH) / 2;
+
+  ctx.drawImage(img, dx, dy, drawW, drawH);
+}
+
+zoomSlider.addEventListener('input', () => {
+  zoom = zoomSlider.value / 100;
+  zoomVal.textContent = zoomSlider.value + '%';
+  drawCanvas();
+});
+
+function startDrag(x, y) { dragging = true; lastX = x; lastY = y; }
+function moveDrag(x, y) {
+  if (!dragging) return;
+  offsetX += (x - lastX);
+  offsetY += (y - lastY);
+  lastX = x; lastY = y;
+  drawCanvas();
+}
+function endDrag() { dragging = false; }
+
+canvas.addEventListener('mousedown', (e) => startDrag(e.clientX, e.clientY));
+window.addEventListener('mousemove', (e) => moveDrag(e.clientX, e.clientY));
+window.addEventListener('mouseup', endDrag);
+canvas.addEventListener('touchstart', (e) => {
+  const t = e.touches[0]; startDrag(t.clientX, t.clientY);
+}, { passive: true });
+canvas.addEventListener('touchmove', (e) => {
+  const t = e.touches[0]; moveDrag(t.clientX, t.clientY);
+}, { passive: true });
+canvas.addEventListener('touchend', endDrag);
+
+// Export the cropped result as a fixed-size JPEG matching FRAME_RATIO
+function exportCroppedImage() {
+  const OUT_W = 1000;
+  const OUT_H = Math.round(OUT_W / FRAME_RATIO);
+  const outCanvas = document.createElement('canvas');
+  outCanvas.width = OUT_W;
+  outCanvas.height = OUT_H;
+  const outCtx = outCanvas.getContext('2d');
+
+  const cw = canvas.width, ch = canvas.height;
+  const baseScale = Math.max(cw / img.width, ch / img.height);
+  const scale = baseScale * zoom;
+  const drawW = img.width * scale;
+  const drawH = img.height * scale;
+  let dx = (cw - drawW) / 2 + offsetX;
+  let dy = (ch - drawH) / 2 + offsetY;
+
+  // scale factor from preview canvas to output canvas
+  const sx = OUT_W / cw;
+  const sy = OUT_H / ch;
+
+  outCtx.drawImage(img, dx * sx, dy * sy, drawW * sx, drawH * sy);
+  return outCanvas.toDataURL('image/jpeg', 0.88).split(',')[1];
+}
+
+// ── GITHUB FILE HELPERS ──────────────────────────
+function encodePath(path) {
+  // Encode each segment separately so "/" stays as a path separator
+  return path.split('/').map(seg => encodeURIComponent(seg)).join('/');
+}
+
+async function getFileSha(path) {
+  const res = await ghRequest(`/contents/${encodePath(path)}?ref=${GH_BRANCH}`);
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error(`Failed to read ${path}: ${res.status}`);
+  const data = await res.json();
+  return data.sha;
+}
+
+async function getFileContent(path) {
+  const res = await ghRequest(`/contents/${encodePath(path)}?ref=${GH_BRANCH}`);
+  if (!res.ok) throw new Error(`Failed to read ${path}: ${res.status}`);
+  const data = await res.json();
+  return { content: decodeURIComponent(escape(atob(data.content))), sha: data.sha };
+}
+
+async function putFile(path, base64Content, message, sha) {
+  const body = {
+    message,
+    content: base64Content,
+    branch: GH_BRANCH
+  };
+  if (sha) body.sha = sha;
+  const res = await ghRequest(`/contents/${encodePath(path)}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  if (!res.ok) {
+    const errBody = await res.json().catch(() => ({}));
+    throw new Error(`Failed to write ${path}: ${res.status} ${errBody.message || ''}`);
+  }
+  return res.json();
+}
+
+function utf8ToBase64(str) {
+  return btoa(unescape(encodeURIComponent(str)));
+}
+
+// ── BUILD HTML SNIPPET FOR A SLOT ─────────────────
+function buildSlotHTML(slotNum, imagePath, dateStr, descEng, descBen) {
+  const dateBadge = dateStr
+    ? `\n                    <div class="photo-date glass-date" style="display:block">${formatDate(dateStr)}</div>`
+    : '';
+  return `            <!-- Photo slot ${slotNum} -->
+            <div class="photo-card">
+                <div class="photo-frame">
+                    <img src="${IMAGE_FOLDER}/${imagePath}" alt="">${dateBadge}
+                </div>
+                <div class="photo-meta">
+                    <p class="photo-desc" data-eng="${escapeHtmlAttr(descEng)}" data-ben="${escapeHtmlAttr(descBen)}">${escapeHtml(descEng)}</p>
+                </div>
+            </div>`;
+}
+
+function formatDate(isoStr) {
+  const [y, m, d] = isoStr.split('-');
+  return `${d} · ${m} · ${y}`;
+}
+function escapeHtml(s) {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+function escapeHtmlAttr(s) {
+  return s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+// ── FIND THE <div class="gallery"> CONTAINER BOUNDARIES ──
+// Returns {openLine, closeLine} (0-indexed) — openLine is the line with
+// <div class="gallery">, closeLine is the line with its matching </div>.
+function findGalleryBounds(lines) {
+  let openLine = -1;
+  for (let i = 0; i < lines.length; i++) {
+    if (/<div\s+class="gallery">/.test(lines[i])) { openLine = i; break; }
+  }
+  if (openLine === -1) return null;
+
+  let depth = 0;
+  let closeLine = -1;
+  for (let i = openLine; i < lines.length; i++) {
+    const opens = (lines[i].match(/<div\b/g) || []).length;
+    const closes = (lines[i].match(/<\/div>/g) || []).length;
+    depth += opens - closes;
+    if (depth === 0 && i > openLine) { closeLine = i; break; }
+  }
+  if (closeLine === -1) return null;
+  return { openLine, closeLine };
+}
+
+// ── FIND SLOT BLOCK BY LINE SCANNING (robust, no fragile regex) ──
+// Finds the line range of a photo-card block that follows a "Photo slot N" comment.
+// Only searches within the gallery container if bounds are provided.
+// Returns {startLine, endLine, indent} (0-indexed, inclusive) or null if not found.
+function findSlotBlock(lines, slotNum, galleryBounds) {
+  const searchStart = galleryBounds ? galleryBounds.openLine : 0;
+  const searchEnd = galleryBounds ? galleryBounds.closeLine : lines.length;
+
+  const commentRe = new RegExp(`Photo slot ${slotNum}\\b`);
+  let startLine = -1;
+  for (let i = searchStart; i < searchEnd; i++) {
+    if (commentRe.test(lines[i])) { startLine = i; break; }
+  }
+  if (startLine === -1) return null;
+
+  // Find the opening <div class="photo-card"> on or after startLine
+  let divLine = -1;
+  for (let i = startLine; i < Math.min(startLine + 4, searchEnd); i++) {
+    if (lines[i].includes('class="photo-card"')) { divLine = i; break; }
+  }
+  if (divLine === -1) return null;
+
+  const indentMatch = lines[divLine].match(/^(\s*)/);
+  const indent = indentMatch ? indentMatch[1] : '';
+
+  // Walk forward counting div open/close tags to find the matching closing </div>
+  let depth = 0;
+  let endLine = -1;
+  for (let i = divLine; i < searchEnd; i++) {
+    const opens = (lines[i].match(/<div\b/g) || []).length;
+    const closes = (lines[i].match(/<\/div>/g) || []).length;
+    depth += opens - closes;
+    if (depth === 0 && i > divLine) { endLine = i; break; }
+  }
+  if (endLine === -1) return null;
+
+  return { startLine, endLine, indent };
+}
+
+function buildPendingChange() {
+  const dateStr = document.getElementById('photoDate').value;
+  const descEng = document.getElementById('descEng').value.trim();
+  const descBen = document.getElementById('descBen').value.trim();
+  if (!descEng) throw new Error('Add an English description first.');
+  if (!imgLoaded) throw new Error('Upload a photo first.');
+
+  const safeName = `slot${selectedSlot}-${Date.now()}.jpg`;
+  const newSlotHTML = buildSlotHTML(selectedSlot, safeName, dateStr, descEng, descBen);
+  return { safeName, newSlotHTML, dateStr, descEng, descBen };
+}
+
+let lastPreview = null;
+
+document.getElementById('previewBtn').addEventListener('click', async () => {
+  const statusEl = document.getElementById('publishStatus');
+  statusEl.innerHTML = '';
+  logBox.textContent = '';
+  logBox.style.display = 'none';
+
+  if (!token) { statusEl.innerHTML = '<span class="status-pill status-err">Enter your GitHub token first</span>'; return; }
+
+  try {
+    const pending = buildPendingChange();
+    log('Fetching current index.html to check the slot exists…');
+    const { content: htmlContent } = await getFileContent(`${SITE_FOLDER}/index.html`);
+    const lines = htmlContent.split('\n');
+    const galleryBounds = findGalleryBounds(lines);
+    if (!galleryBounds) throw new Error('Could not find the <div class="gallery"> container in index.html. Nothing was changed.');
+    const block = findSlotBlock(lines, selectedSlot, galleryBounds);
+
+    document.getElementById('previewBox').style.display = 'block';
+    const previewText = document.getElementById('previewText');
+
+    if (block) {
+      previewText.value =
+`Slot ${selectedSlot} EXISTS in index.html (lines ${block.startLine + 1}–${block.endLine + 1}).
+It will be REPLACED with:
+
+${pending.newSlotHTML}`;
+      log(`Found slot ${selectedSlot} at lines ${block.startLine + 1}-${block.endLine + 1}.`);
+    } else {
+      previewText.value =
+`Slot ${selectedSlot} was NOT found in index.html as an existing block.
+A NEW block will be inserted at the end of the gallery:
+
+${pending.newSlotHTML}`;
+      log(`Slot ${selectedSlot} not found as existing block — will insert new.`);
+    }
+    lastPreview = pending;
+  } catch (e) {
+    statusEl.innerHTML = '<span class="status-pill status-err">Could not preview</span>';
+    log('ERROR: ' + e.message);
+  }
+});
+
+// ── PUBLISH FLOW ───────────────────────────────────
+document.getElementById('publishBtn').addEventListener('click', async () => {
+  const statusEl = document.getElementById('publishStatus');
+  logBox.textContent = '';
+  logBox.style.display = 'none';
+
+  if (!token) { statusEl.innerHTML = '<span class="status-pill status-err">Enter your GitHub token first</span>'; return; }
+  if (!lastPreview) { statusEl.innerHTML = '<span class="status-pill status-err">Click "Preview change" first</span>'; return; }
+
+  const btn = document.getElementById('publishBtn');
+  btn.disabled = true;
+  statusEl.innerHTML = '<span class="status-pill">Publishing…</span>';
+
+  try {
+    const { safeName, newSlotHTML } = lastPreview;
+    const imagePath = `${IMAGE_UPLOAD_FOLDER}/${safeName}`;
+
+    // 1. Upload image
+    log('Preparing cropped image…');
+    const croppedBase64 = exportCroppedImage();
+    log(`Uploading image to ${imagePath}…`);
+    await putFile(imagePath, croppedBase64, `Add photo for slot ${selectedSlot}`, null);
+    log('Image uploaded ✓');
+
+    // 2. Fetch fresh index.html (re-fetch in case it changed since preview)
+    log('Fetching current index.html…');
+    const { content: htmlContent, sha: htmlSha } = await getFileContent(`${SITE_FOLDER}/index.html`);
+    const lines = htmlContent.split('\n');
+    const galleryBounds = findGalleryBounds(lines);
+    if (!galleryBounds) throw new Error('Could not find the <div class="gallery"> container in index.html. Nothing was changed — your image upload succeeded but index.html was not touched.');
+    const block = findSlotBlock(lines, selectedSlot, galleryBounds);
+
+    let updatedHtml;
+    if (block) {
+      log(`Replacing slot ${selectedSlot} (lines ${block.startLine + 1}-${block.endLine + 1})…`);
+      const before = lines.slice(0, block.startLine);
+      const after = lines.slice(block.endLine + 1);
+      updatedHtml = [...before, newSlotHTML, ...after].join('\n');
+    } else {
+      log(`Slot ${selectedSlot} not found — inserting new slot just before the gallery's closing </div> (line ${galleryBounds.closeLine + 1})…`);
+      const before = lines.slice(0, galleryBounds.closeLine);
+      const after = lines.slice(galleryBounds.closeLine);
+      updatedHtml = [...before, newSlotHTML, ...after].join('\n');
+    }
+
+    if (updatedHtml === htmlContent) {
+      throw new Error('No changes were detected. Nothing was overwritten.');
+    }
+
+    // 3. Commit updated index.html
+    log('Committing updated index.html…');
+    await putFile(`${SITE_FOLDER}/index.html`, utf8ToBase64(updatedHtml), `Update gallery slot ${selectedSlot}`, htmlSha);
+    log('index.html updated ✓');
+
+    statusEl.innerHTML = '<span class="status-pill status-ok">Published ✓ — site will update in ~1 min</span>';
+    log('Done! Netlify will rebuild automatically.');
+    lastPreview = null;
+    document.getElementById('previewBox').style.display = 'none';
+  } catch (e) {
+    statusEl.innerHTML = `<span class="status-pill status-err">Failed</span>`;
+    log('ERROR: ' + e.message);
+  } finally {
+    btn.disabled = false;
+  }
+});
+</script>
+</body>
+</html>
