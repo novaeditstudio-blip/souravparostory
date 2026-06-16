@@ -264,7 +264,9 @@ const GH_USER = 'novaeditstudio-blip';
 const GH_REPO = 'souravparostory';
 const GH_BRANCH = 'main';
 const SITE_FOLDER = 'Loveria by ai';
-const IMAGE_FOLDER = `${SITE_FOLDER}/recources`;
+const IMAGE_SUBFOLDER = 'recources'; // folder name as it appears inside SITE_FOLDER
+const IMAGE_UPLOAD_FOLDER = `${SITE_FOLDER}/${IMAGE_SUBFOLDER}`; // full path for GitHub uploads
+const IMAGE_FOLDER = IMAGE_SUBFOLDER; // relative path used inside index.html's <img src>, since index.html lives inside SITE_FOLDER
 const FRAME_RATIO = 4 / 5; // matches .photo-frame aspect-ratio in style.css
 
 let token = '';
@@ -664,7 +666,7 @@ document.getElementById('publishBtn').addEventListener('click', async () => {
 
   try {
     const { safeName, newSlotHTML } = lastPreview;
-    const imagePath = `${IMAGE_FOLDER}/${safeName}`;
+    const imagePath = `${IMAGE_UPLOAD_FOLDER}/${safeName}`;
 
     // 1. Upload image
     log('Preparing cropped image…');
