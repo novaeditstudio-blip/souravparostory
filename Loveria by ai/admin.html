@@ -265,6 +265,7 @@ const GH_REPO = 'souravparostory';
 const GH_BRANCH = 'main'; // change to 'master' below if your default branch is master
 const IMAGE_FOLDER = 'recources';
 const FRAME_RATIO = 4 / 5; // matches .photo-frame aspect-ratio in style.css
+const SITE_FOLDER = 'Loveria by ai';  
 
 let token = '';
 let slots = [1, 2, 3, 4];
@@ -614,7 +615,7 @@ document.getElementById('previewBtn').addEventListener('click', async () => {
   try {
     const pending = buildPendingChange();
     log('Fetching current index.html to check the slot exists…');
-    const { content: htmlContent } = await getFileContent('index.html');
+    const { content: htmlContent } = await getFileContent(`${Loveria_by_ai}/index.html`);
     const lines = htmlContent.split('\n');
     const block = findSlotBlock(lines, selectedSlot);
 
@@ -669,7 +670,7 @@ document.getElementById('publishBtn').addEventListener('click', async () => {
 
     // 2. Fetch fresh index.html (re-fetch in case it changed since preview)
     log('Fetching current index.html…');
-    const { content: htmlContent, sha: htmlSha } = await getFileContent('index.html');
+    const { content: htmlContent, sha: htmlSha } = await getFileContent(`${Loveria_by_ai}/index.html`);
     const lines = htmlContent.split('\n');
     const block = findSlotBlock(lines, selectedSlot);
 
@@ -694,7 +695,7 @@ document.getElementById('publishBtn').addEventListener('click', async () => {
 
     // 3. Commit updated index.html
     log('Committing updated index.html…');
-    await putFile('index.html', utf8ToBase64(updatedHtml), `Update gallery slot ${selectedSlot}`, htmlSha);
+    await putFile(`${Loveria_by_ai}/index.html`, utf8ToBase64(updatedHtml), `Update gallery slot ${selectedSlot}`, htmlSha);
     log('index.html updated ✓');
 
     statusEl.innerHTML = '<span class="status-pill status-ok">Published ✓ — site will update in ~1 min</span>';
