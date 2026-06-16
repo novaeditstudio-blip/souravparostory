@@ -561,20 +561,46 @@ function escapeHtmlAttr(s) {
   return s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
+// ── FIND THE <div class="gallery"> CONTAINER BOUNDARIES ──
+// Returns {openLine, closeLine} (0-indexed) — openLine is the line with
+// <div class="gallery">, closeLine is the line with its matching </div>.
+function findGalleryBounds(lines) {
+  let openLine = -1;
+  for (let i = 0; i < lines.length; i++) {
+    if (/<div\s+class="gallery">/.test(lines[i])) { openLine = i; break; }
+  }
+  if (openLine === -1) return null;
+
+  let depth = 0;
+  let closeLine = -1;
+  for (let i = openLine; i < lines.length; i++) {
+    const opens = (lines[i].match(/<div\b/g) || []).length;
+    const closes = (lines[i].match(/<\/div>/g) || []).length;
+    depth += opens - closes;
+    if (depth === 0 && i > openLine) { closeLine = i; break; }
+  }
+  if (closeLine === -1) return null;
+  return { openLine, closeLine };
+}
+
 // ── FIND SLOT BLOCK BY LINE SCANNING (robust, no fragile regex) ──
 // Finds the line range of a photo-card block that follows a "Photo slot N" comment.
+// Only searches within the gallery container if bounds are provided.
 // Returns {startLine, endLine, indent} (0-indexed, inclusive) or null if not found.
-function findSlotBlock(lines, slotNum) {
+function findSlotBlock(lines, slotNum, galleryBounds) {
+  const searchStart = galleryBounds ? galleryBounds.openLine : 0;
+  const searchEnd = galleryBounds ? galleryBounds.closeLine : lines.length;
+
   const commentRe = new RegExp(`Photo slot ${slotNum}\\b`);
   let startLine = -1;
-  for (let i = 0; i < lines.length; i++) {
+  for (let i = searchStart; i < searchEnd; i++) {
     if (commentRe.test(lines[i])) { startLine = i; break; }
   }
   if (startLine === -1) return null;
 
   // Find the opening <div class="photo-card"> on or after startLine
   let divLine = -1;
-  for (let i = startLine; i < Math.min(startLine + 4, lines.length); i++) {
+  for (let i = startLine; i < Math.min(startLine + 4, searchEnd); i++) {
     if (lines[i].includes('class="photo-card"')) { divLine = i; break; }
   }
   if (divLine === -1) return null;
@@ -585,12 +611,11 @@ function findSlotBlock(lines, slotNum) {
   // Walk forward counting div open/close tags to find the matching closing </div>
   let depth = 0;
   let endLine = -1;
-  for (let i = divLine; i < lines.length; i++) {
+  for (let i = divLine; i < searchEnd; i++) {
     const opens = (lines[i].match(/<div\b/g) || []).length;
     const closes = (lines[i].match(/<\/div>/g) || []).length;
     depth += opens - closes;
     if (depth === 0 && i > divLine) { endLine = i; break; }
-    if (depth === 0 && i === divLine) { endLine = i; break; } // self-contained single line, unlikely here
   }
   if (endLine === -1) return null;
 
@@ -624,7 +649,9 @@ document.getElementById('previewBtn').addEventListener('click', async () => {
     log('Fetching current index.html to check the slot exists…');
     const { content: htmlContent } = await getFileContent(`${SITE_FOLDER}/index.html`);
     const lines = htmlContent.split('\n');
-    const block = findSlotBlock(lines, selectedSlot);
+    const galleryBounds = findGalleryBounds(lines);
+    if (!galleryBounds) throw new Error('Could not find the <div class="gallery"> container in index.html. Nothing was changed.');
+    const block = findSlotBlock(lines, selectedSlot, galleryBounds);
 
     document.getElementById('previewBox').style.display = 'block';
     const previewText = document.getElementById('previewText');
@@ -679,7 +706,9 @@ document.getElementById('publishBtn').addEventListener('click', async () => {
     log('Fetching current index.html…');
     const { content: htmlContent, sha: htmlSha } = await getFileContent(`${SITE_FOLDER}/index.html`);
     const lines = htmlContent.split('\n');
-    const block = findSlotBlock(lines, selectedSlot);
+    const galleryBounds = findGalleryBounds(lines);
+    if (!galleryBounds) throw new Error('Could not find the <div class="gallery"> container in index.html. Nothing was changed — your image upload succeeded but index.html was not touched.');
+    const block = findSlotBlock(lines, selectedSlot, galleryBounds);
 
     let updatedHtml;
     if (block) {
@@ -688,12 +717,10 @@ document.getElementById('publishBtn').addEventListener('click', async () => {
       const after = lines.slice(block.endLine + 1);
       updatedHtml = [...before, newSlotHTML, ...after].join('\n');
     } else {
-      log(`Slot ${selectedSlot} not found — inserting new slot before the gallery hint comment…`);
-      const insertMarker = lines.findIndex(l => l.includes('HOW TO USE PHOTOS'));
-      if (insertMarker === -1) throw new Error('Could not find a safe insertion point in index.html. Nothing was changed.');
-      const before = lines.slice(0, insertMarker);
-      const after = lines.slice(insertMarker);
-      updatedHtml = [...before, newSlotHTML, '', ...after].join('\n');
+      log(`Slot ${selectedSlot} not found — inserting new slot just before the gallery's closing </div> (line ${galleryBounds.closeLine + 1})…`);
+      const before = lines.slice(0, galleryBounds.closeLine);
+      const after = lines.slice(galleryBounds.closeLine);
+      updatedHtml = [...before, newSlotHTML, ...after].join('\n');
     }
 
     if (updatedHtml === htmlContent) {
