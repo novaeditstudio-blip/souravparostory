@@ -12,7 +12,7 @@ const translations = {
     souravBorn: "27 August 2007",
     souravHome: "Krishnanagar",
     souravLoves: "Biriyani 🍛",
-    parbotiBorn: "29 June 2010",
+    parbotiBorn: "29 June 2011",
     parbotiHome: "Krishnanagar",
     parbotiLoves: "Momo 🥟",
     bornLabel: "Born",
