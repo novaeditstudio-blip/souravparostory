@@ -49,7 +49,7 @@ const translations = {
     souravBorn: "২৭ আগস্ট ২০০৭",
     souravHome: "কৃষ্ণনগর",
     souravLoves: "বিরিয়ানি 🍛",
-    parbotiBorn: "২৯ জুন ২০১০",
+    parbotiBorn: "২৯ জুন ২০১১",
     parbotiHome: "কৃষ্ণনগর",
     parbotiLoves: "মোমো 🥟",
     bornLabel: "জন্ম",
