@@ -76,6 +76,98 @@ const translations = {
   }
 };
 
+// ── LIVE COUNTERS ────────────────────────────────────────────
+// The moment it all began — 29 July 2024, 7:10 PM.
+// Change this if the exact date/time ever needs correcting.
+const RELATIONSHIP_START = new Date(2024, 6, 29, 19, 10, 0);
+ 
+const BANGLA_DIGITS = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
+function toBanglaNum(n) {
+  return String(n).split('').map(ch => (ch >= '0' && ch <= '9') ? BANGLA_DIGITS[ch] : ch).join('');
+}
+ 
+function pad2(n) { return String(n).padStart(2, '0'); }
+ 
+// Calendar-aware years/months/days between two dates
+function diffYMD(start, end) {
+  let years = end.getFullYear() - start.getFullYear();
+  let months = end.getMonth() - start.getMonth();
+  let days = end.getDate() - start.getDate();
+  if (days < 0) {
+    months -= 1;
+    const prevMonth = new Date(end.getFullYear(), end.getMonth(), 0);
+    days += prevMonth.getDate();
+  }
+  if (months < 0) {
+    years -= 1;
+    months += 12;
+  }
+  return { years, months, days };
+}
+ 
+function ordinalSuffixEng(n) {
+  const j = n % 10, k = n % 100;
+  if (j === 1 && k !== 11) return n + 'st';
+  if (j === 2 && k !== 12) return n + 'nd';
+  if (j === 3 && k !== 13) return n + 'rd';
+  return n + 'th';
+}
+ 
+const BANGLA_ORDINAL_SUFFIX = { 1: 'ম', 2: 'য়', 3: 'য়', 4: 'র্থ', 5: 'ম', 6: 'ষ্ঠ', 7: 'ম', 8: 'ম', 9: 'ম', 10: 'ম' };
+function ordinalSuffixBen(n) {
+  const suffix = BANGLA_ORDINAL_SUFFIX[n] || 'তম';
+  return toBanglaNum(n) + suffix;
+}
+ 
+// Next anniversary date on/after "now", plus which anniversary number it is
+function getNextAnniversary(now) {
+  let year = now.getFullYear();
+  let anniv = new Date(year, RELATIONSHIP_START.getMonth(), RELATIONSHIP_START.getDate(),
+                        RELATIONSHIP_START.getHours(), RELATIONSHIP_START.getMinutes(), RELATIONSHIP_START.getSeconds());
+  if (anniv <= now) {
+    year += 1;
+    anniv = new Date(year, RELATIONSHIP_START.getMonth(), RELATIONSHIP_START.getDate(),
+                      RELATIONSHIP_START.getHours(), RELATIONSHIP_START.getMinutes(), RELATIONSHIP_START.getSeconds());
+  }
+  const ordinal = year - RELATIONSHIP_START.getFullYear();
+  return { anniv, ordinal };
+}
+ 
+function updateCounters(lang) {
+  const now = new Date();
+ 
+  // "Together for" — calendar-aware y/m/d
+  const { years, months, days } = diffYMD(RELATIONSHIP_START, now);
+  const togetherEl = document.getElementById('togetherFor');
+  if (togetherEl) {
+    togetherEl.textContent = lang === 'ben'
+      ? `${toBanglaNum(years)} বছর ${toBanglaNum(months)} মাস ${toBanglaNum(days)} দিন`
+      : `${years}y ${months}m ${days}d`;
+  }
+ 
+  // Countdown to the next anniversary
+  const { anniv, ordinal } = getNextAnniversary(now);
+  const msLeft = Math.max(0, anniv - now);
+  const totalSeconds = Math.floor(msLeft / 1000);
+  const d = Math.floor(totalSeconds / 86400);
+  const h = Math.floor((totalSeconds % 86400) / 3600);
+  const m = Math.floor((totalSeconds % 3600) / 60);
+  const s = totalSeconds % 60;
+ 
+  const annivTitleEl = document.getElementById('annivTitle');
+  const annivValueEl = document.getElementById('annivCountdown');
+  if (annivTitleEl) {
+    annivTitleEl.textContent = lang === 'ben'
+      ? `${ordinalSuffixBen(ordinal)} বার্ষিকী`
+      : `${ordinalSuffixEng(ordinal)} Anniversary`;
+  }
+  if (annivValueEl) {
+    annivValueEl.textContent = lang === 'ben'
+      ? `${toBanglaNum(d)} দিন ${toBanglaNum(h)} ঘন্টা ${toBanglaNum(pad2(m))} মিনিট ${toBanglaNum(pad2(s))} সেকেন্ড`
+      : `${d}d ${h}h ${pad2(m)}m ${pad2(s)}s`;
+  }
+}
+
 // ── APPLY LANGUAGE ─────────────────────────────────────────────
 function applyLang(lang) {
   const t = translations[lang];
@@ -210,6 +302,21 @@ window.addEventListener('DOMContentLoaded', () => {
       }, 200);
     });
   }
+
+  // Language toggle
+  const toggle = document.getElementById('langToggle');
+  if (toggle) {
+    toggle.addEventListener('change', () => {
+      applyLang(toggle.checked ? 'ben' : 'eng');
+      updateCounters(toggle.checked ? 'ben' : 'eng');
+    });
+  }
+ 
+  // Live counters — "Together for" & next-anniversary countdown
+  updateCounters(toggle && toggle.checked ? 'ben' : 'eng');
+  setInterval(() => {
+    updateCounters(toggle && toggle.checked ? 'ben' : 'eng');
+  }, 1000);
 
   // Language toggle
   const toggle = document.getElementById('langToggle');
